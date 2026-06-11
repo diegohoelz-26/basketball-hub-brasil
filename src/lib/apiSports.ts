@@ -76,10 +76,13 @@ export async function getGamesByDate(date: string): Promise<Game[]> {
   const url = `${API_BASE_URL}/games?date=${date}&timezone=America/Sao_Paulo`
 
   try {
+    // Jogos de hoje revalidam a cada 60s para que o polling ao vivo tenha efeito.
+    // Datas passadas/futuras usam o cache padrão de 5 minutos.
+    const revalidate = date === getTodayDate() ? 60 : API_CACHE_SECONDS
+
     const response = await fetch(url, {
       headers: getHeaders(),
-      // Cache nativo do Next.js 15: revalida a cada 5 minutos
-      next: { revalidate: API_CACHE_SECONDS },
+      next: { revalidate },
     })
 
     if (!response.ok) {

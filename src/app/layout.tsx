@@ -18,11 +18,41 @@ const bebasNeue = Bebas_Neue({
   subsets: ['latin'],
 })
 
+const SITE_URL = 'https://basketballhub.com.br'
+
 export const metadata: Metadata = {
-  title: 'Basketball Hub Brasil — Todos os jogos de basquete em um só lugar',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'Basketball Hub Brasil — Todos os jogos de basquete em um só lugar',
+    template: '%s · Basketball Hub Brasil',
+  },
   description:
     'Placares ao vivo, calendário completo e onde assistir. NBA, WNBA, NBB, EuroLeague e Liga ACB.',
-  keywords: ['basquete', 'basketball', 'NBA', 'WNBA', 'NBB', 'EuroLeague', 'ACB', 'jogos ao vivo', 'placar'],
+  keywords: [
+    'basquete', 'basketball', 'NBA', 'WNBA', 'NBB', 'EuroLeague', 'ACB',
+    'jogos ao vivo', 'placar', 'onde assistir basquete',
+  ],
+  openGraph: {
+    type: 'website',
+    locale: 'pt_BR',
+    url: SITE_URL,
+    siteName: 'Basketball Hub Brasil',
+    title: 'Basketball Hub Brasil — Todos os jogos de basquete em um só lugar',
+    description:
+      'Placares ao vivo, calendário completo e onde assistir. NBA, WNBA, NBB, EuroLeague e Liga ACB.',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Basketball Hub Brasil',
+    description: 'Placares ao vivo, calendário completo e onde assistir.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: SITE_URL,
+  },
 }
 
 export default function RootLayout({

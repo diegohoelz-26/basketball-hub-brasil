@@ -95,13 +95,13 @@ function LeagueGroup({ league, games }: LeagueGroupProps) {
       {/* Cabeçalho da liga */}
       <div className="flex items-center gap-2.5 mb-3 pb-2 border-b border-brand-border">
         {league.logo && (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={league.logo}
             alt={league.name}
             width={20}
             height={20}
             className="object-contain flex-shrink-0"
-            // eslint-disable-next-line @next/next/no-img-element
           />
         )}
         <span className="text-white font-semibold text-sm">{league.name}</span>

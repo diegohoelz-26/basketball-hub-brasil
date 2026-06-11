@@ -1,12 +1,15 @@
 // Server Component
 import type { Game } from '@/types'
 import { getDisplayStatus, isLive, formatGameTime } from '@/lib/apiSports'
+import { LEAGUE_CHANNELS } from '@/constants'
+import { Tv } from 'lucide-react'
 
 interface GameCardProps {
   game: Game
+  highlight?: boolean
 }
 
-export default function GameCard({ game }: GameCardProps) {
+export default function GameCard({ game, highlight = false }: GameCardProps) {
   const displayStatus = getDisplayStatus(game.status.short)
   const live          = isLive(game.status.short)
   const homeScore     = game.scores.home.total
@@ -15,9 +18,14 @@ export default function GameCard({ game }: GameCardProps) {
   const gameTime      = formatGameTime(game.timestamp)
   const homeWinning   = hasScore && homeScore > awayScore
   const awayWinning   = hasScore && awayScore > homeScore
+  const channels      = LEAGUE_CHANNELS[game.league.id] ?? []
 
   return (
-    <article className="bg-brand-card border border-brand-border rounded-xl px-4 py-3 hover:border-brand-orange/40 transition-colors duration-150">
+    <article className={`bg-brand-card border rounded-xl px-4 py-3 transition-colors duration-150 ${
+      highlight
+        ? 'border-brand-live/50 shadow-[0_0_24px_rgba(255,59,59,0.10)] hover:border-brand-live/80'
+        : 'border-brand-border hover:border-brand-orange/40'
+    }`}>
 
       {/* Status */}
       <div className="flex items-center justify-between mb-3">
@@ -41,6 +49,14 @@ export default function GameCard({ game }: GameCardProps) {
         <TeamRow name={game.teams.home.name} logo={game.teams.home.logo} score={homeScore} winning={homeWinning} hasScore={hasScore} />
         <TeamRow name={game.teams.away.name} logo={game.teams.away.logo} score={awayScore} winning={awayWinning} hasScore={hasScore} />
       </div>
+
+      {/* Canais de transmissão */}
+      {channels.length > 0 && (
+        <div className="mt-2.5 pt-2.5 border-t border-brand-border flex items-center gap-1.5">
+          <Tv size={10} className="text-brand-muted flex-shrink-0" />
+          <span className="text-[10px] text-brand-muted truncate">{channels.join(' · ')}</span>
+        </div>
+      )}
     </article>
   )
 }
@@ -58,7 +74,8 @@ function TeamRow({ name, logo, score, winning, hasScore }: TeamRowProps) {
     <div className="flex items-center gap-3">
       <div className="w-7 h-7 flex-shrink-0 flex items-center justify-center">
         {logo
-          ? <img src={logo} alt={name} width={28} height={28} className="object-contain w-7 h-7" />
+          // eslint-disable-next-line @next/next/no-img-element
+          ? <img src={logo} alt={name} width={28} height={28} loading="lazy" className="object-contain w-7 h-7" />
           : <div className="w-7 h-7 rounded-full bg-brand-border" />
         }
       </div>
