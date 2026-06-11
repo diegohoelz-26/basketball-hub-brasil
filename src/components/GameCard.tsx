@@ -1,16 +1,14 @@
 // Server Component
 import type { Game } from '@/types'
-import { getDisplayStatus, isLive, formatGameTime } from '@/lib/apiSports'
+import { getDisplayStatus, isLive, formatGameTime, proxyImg } from '@/lib/apiSports'
 import { LEAGUE_CHANNELS } from '@/constants'
 import { Tv } from 'lucide-react'
-import TeamLogo from './TeamLogo'
 
 interface GameCardProps {
   game: Game
-  highlight?: boolean
 }
 
-export default function GameCard({ game, highlight = false }: GameCardProps) {
+export default function GameCard({ game }: GameCardProps) {
   const displayStatus = getDisplayStatus(game.status.short)
   const live          = isLive(game.status.short)
   const homeScore     = game.scores.home.total
@@ -22,14 +20,9 @@ export default function GameCard({ game, highlight = false }: GameCardProps) {
   const channels      = LEAGUE_CHANNELS[game.league.id] ?? []
 
   return (
-    <article
-      className={`bg-brand-card border rounded-xl px-4 py-3 transition-colors duration-150 ${
-        highlight
-          ? 'border-brand-live/50 shadow-[0_0_24px_rgba(255,59,59,0.10)] hover:border-brand-live/80'
-          : 'border-brand-border hover:border-brand-orange/40'
-      }`}
-    >
-      {/* Status */}
+    <article className="bg-brand-card border border-brand-border rounded-xl px-4 py-3 hover:border-brand-orange/40 transition-colors duration-150">
+
+      {/* Status + horário */}
       <div className="flex items-center justify-between mb-3">
         {live ? (
           <span className="flex items-center gap-1.5 text-brand-live text-xs font-bold uppercase tracking-wider">
@@ -39,11 +32,9 @@ export default function GameCard({ game, highlight = false }: GameCardProps) {
               : `${game.status.short}${game.status.timer ? ` ${game.status.timer}'` : ''}`}
           </span>
         ) : (
-          <span
-            className={`text-xs font-semibold uppercase tracking-wider ${
-              displayStatus === 'FINALIZADO' ? 'text-brand-muted' : 'text-white/60'
-            }`}
-          >
+          <span className={`text-xs font-semibold uppercase tracking-wider ${
+            displayStatus === 'FINALIZADO' ? 'text-brand-muted' : 'text-white/60'
+          }`}>
             {displayStatus === 'AGENDADO' ? gameTime : displayStatus}
           </span>
         )}
@@ -52,33 +43,38 @@ export default function GameCard({ game, highlight = false }: GameCardProps) {
         )}
       </div>
 
-      {/* Times */}
-      <div className="flex flex-col gap-2.5">
+      {/* Times e placar */}
+      <div className="flex flex-col gap-2">
         <TeamRow
           name={game.teams.home.name}
-          logo={game.teams.home.logo}
+          logo={proxyImg(game.teams.home.logo)}
           score={homeScore}
           winning={homeWinning}
           hasScore={hasScore}
         />
         <TeamRow
           name={game.teams.away.name}
-          logo={game.teams.away.logo}
+          logo={proxyImg(game.teams.away.logo)}
           score={awayScore}
           winning={awayWinning}
           hasScore={hasScore}
         />
       </div>
 
-      {/* Canais de transmissão */}
-      {channels.length > 0 && (
-        <div className="mt-3 pt-2.5 border-t border-brand-border flex items-center gap-1.5">
-          <Tv size={10} className="text-brand-muted flex-shrink-0" />
-          <span className="text-[10px] text-brand-muted truncate">
+      {/* Onde assistir */}
+      <div className="mt-3 pt-2 border-t border-brand-border flex items-center gap-1.5">
+        <Tv size={11} className="text-brand-muted flex-shrink-0" />
+        {channels.length > 0 ? (
+          <span className="text-[11px] text-brand-muted">
             {channels.join(' · ')}
           </span>
-        </div>
-      )}
+        ) : (
+          <span className="text-[11px] text-brand-muted italic">
+            Transmissão indisponível
+          </span>
+        )}
+      </div>
+
     </article>
   )
 }
@@ -94,20 +90,26 @@ interface TeamRowProps {
 function TeamRow({ name, logo, score, winning, hasScore }: TeamRowProps) {
   return (
     <div className="flex items-center gap-3">
-      <TeamLogo src={logo} name={name} size={36} />
-      <span
-        className={`flex-1 text-sm truncate ${
-          winning ? 'text-white font-semibold' : 'text-white/80'
-        }`}
-      >
+      <div className="w-7 h-7 flex-shrink-0 flex items-center justify-center">
+        {logo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={logo}
+            alt=""
+            width={28}
+            height={28}
+            className="object-contain w-7 h-7"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-7 h-7 rounded-full bg-brand-border" />
+        )}
+      </div>
+      <span className={`flex-1 text-sm truncate ${winning ? 'text-white font-semibold' : 'text-white/80'}`}>
         {name}
       </span>
       {hasScore && (
-        <span
-          className={`text-lg font-bold tabular-nums w-9 text-right ${
-            winning ? 'text-white' : 'text-white/50'
-          }`}
-        >
+        <span className={`text-base font-bold tabular-nums w-8 text-right ${winning ? 'text-white' : 'text-white/50'}`}>
           {score}
         </span>
       )}

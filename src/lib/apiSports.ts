@@ -4,7 +4,7 @@
 // ============================================================
 
 import type { ApiGame, ApiResponse, Game, DisplayStatus } from '@/types'
-import { API_BASE_URL, API_CACHE_SECONDS, GAME_STATUS_CODES, FEATURED_LEAGUES, LEAGUE_NAME_OVERRIDES } from '@/constants'
+import { API_BASE_URL, API_CACHE_SECONDS, GAME_STATUS_CODES } from '@/constants'
 
 // ------------------------------------------------------------
 // Helpers internos
@@ -34,12 +34,10 @@ function getHeaders(): HeadersInit {
  * Normaliza um ApiGame para o tipo Game (apenas os campos usados pela app).
  * Garante que nenhum campo obrigatório chegue como undefined.
  */
-
 function normalizeGame(raw: ApiGame): Game {
-  const leagueName = LEAGUE_NAME_OVERRIDES[raw.league.id] ?? raw.league.name
   return {
     id:        raw.id,
-    date:      raw.date.split('T')[0],
+    date:      raw.date.split('T')[0],    // "2026-06-09T00:00:00+00:00" → "2026-06-09"
     time:      raw.time ?? '--:--',
     timestamp: raw.timestamp,
     status:    {
@@ -47,8 +45,7 @@ function normalizeGame(raw: ApiGame): Game {
       short: raw.status?.short ?? 'NS',
       timer: raw.status?.timer ?? null,
     },
-    stage:   raw.stage ?? null,
-    league:  { ...raw.league, name: leagueName },
+    league:  raw.league,
     country: raw.country,
     teams: {
       home: raw.teams.home,
@@ -79,13 +76,10 @@ export async function getGamesByDate(date: string): Promise<Game[]> {
   const url = `${API_BASE_URL}/games?date=${date}&timezone=America/Sao_Paulo`
 
   try {
-    // Jogos de hoje revalidam a cada 60s para que o polling ao vivo tenha efeito.
-    // Datas passadas/futuras usam o cache padrão de 5 minutos.
-    const revalidate = date === getTodayDate() ? 60 : API_CACHE_SECONDS
-
     const response = await fetch(url, {
       headers: getHeaders(),
-      next: { revalidate },
+      // Cache nativo do Next.js 15: revalida a cada 5 minutos
+      next: { revalidate: API_CACHE_SECONDS },
     })
 
     if (!response.ok) {
@@ -169,57 +163,6 @@ export function formatGameTime(timestamp: number): string {
   }
 }
 
-const FINALS_KEYWORDS = ['final', 'playoff', 'championship', 'semi-final', 'semifinal']
-
-/** Retorna true se o jogo é de fase eliminatória (finais, playoffs). */
-export function isFinals(game: Game): boolean {
-  if (!game.stage) return false
-  const s = game.stage.toLowerCase()
-  return FINALS_KEYWORDS.some((kw) => s.includes(kw))
-}
-
-/**
- * Retorna o jogo em destaque do dia.
- *
- * Sempre aparece quando NBA, WNBA ou NBB têm jogos — independente da fase.
- * Finais/playoffs de qualquer liga têm prioridade máxima.
- *
- * Prioridade:
- *  1. Finais/playoffs de qualquer liga em destaque (NBA, WNBA, NBB, EuroLeague, ACB)
- *  2. Jogo ao vivo de NBA, WNBA ou NBB
- *  3. Primeiro jogo agendado de NBA, WNBA ou NBB
- *
- * Retorna null somente quando não há jogos de NBA, WNBA ou NBB no dia.
- */
-export function getFeaturedGame(games: Game[]): Game | null {
-  const ALL_FEATURED  = FEATURED_LEAGUES.map((l) => l.id)
-  const TOP_LEAGUES   = [12, 13, 26] // NBA, WNBA (NBA W), NBB — aparecem todo dia
-
-  // 1. Finais/playoffs de qualquer liga em destaque (mais importante do dia)
-  for (const leagueId of ALL_FEATURED) {
-    const game = games
-      .filter((g) => g.league.id === leagueId)
-      .find((g) => isFinals(g))
-    if (game) return game
-  }
-
-  // 2. Jogo ao vivo das ligas principais
-  for (const leagueId of TOP_LEAGUES) {
-    const game = games.find(
-      (g) => g.league.id === leagueId && isLive(g.status.short)
-    )
-    if (game) return game
-  }
-
-  // 3. Primeiro jogo do dia das ligas principais (temporada regular)
-  for (const leagueId of TOP_LEAGUES) {
-    const game = games.find((g) => g.league.id === leagueId)
-    if (game) return game
-  }
-
-  return null
-}
-
 /**
  * Retorna a data de hoje no fuso de Brasília (BRT) no formato YYYY-MM-DD.
  * Usa BRT porque a query para a API também usa timezone=America/Sao_Paulo.
@@ -229,4 +172,17 @@ export function getTodayDate(): string {
     timeZone: 'America/Sao_Paulo',
     year: 'numeric', month: '2-digit', day: '2-digit',
   }).split('/').reverse().join('-') // "09/06/2026" → "2026-06-09"
+}
+
+/**
+ * Converte URL direta da API-Sports para URL do proxy local.
+ * Evita bloqueio de CORS/hotlink do media.api-sports.io.
+ *
+ * @example
+ *   proxyImg('https://media.api-sports.io/basketball/teams/12.png')
+ *   → '/api/img?url=https%3A%2F%2Fmedia.api-sports.io%2F...'
+ */
+export function proxyImg(url: string | null | undefined): string {
+  if (!url) return ''
+  return `/api/img?url=${encodeURIComponent(url)}`
 }

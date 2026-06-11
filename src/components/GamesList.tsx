@@ -1,18 +1,18 @@
-// Server Component — agrupa jogos por liga e renderiza
+'use client'
+
+import { useState } from 'react'
 import type { Game, ApiLeague, GamesByLeague } from '@/types'
-import LeagueLogo from './LeagueLogo'
+import { PRIORITY_LEAGUES } from '@/constants'
+import { proxyImg } from '@/lib/apiSports'
 import GameCard from './GameCard'
 
 interface GamesListProps {
   games: Game[]
   selectedDate: string
-  hasLeagueFilter?: boolean
 }
 
-/** Agrupa a lista de jogos por liga, preservando a ordem de aparição */
 function groupByLeague(games: Game[]): GamesByLeague[] {
   const map = new Map<number, GamesByLeague>()
-
   for (const game of games) {
     const existing = map.get(game.league.id)
     if (existing) {
@@ -21,48 +21,50 @@ function groupByLeague(games: Game[]): GamesByLeague[] {
       map.set(game.league.id, { league: game.league, games: [game] })
     }
   }
-
-  return Array.from(map.values())
-}
-
-/** Formata a data selecionada para exibição amigável */
-function formatDateLabel(dateStr: string): string {
-  const [year, month, day] = dateStr.split('-').map(Number)
-  const date  = new Date(year, month - 1, day)
-  const today = new Date()
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-
-  if (dateStr === todayStr) return 'Hoje'
-
-  const yesterday = new Date(today)
-  yesterday.setDate(today.getDate() - 1)
-  const ystStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`
-  if (dateStr === ystStr) return 'Ontem'
-
-  const tomorrow = new Date(today)
-  tomorrow.setDate(today.getDate() + 1)
-  const tmrStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`
-  if (dateStr === tmrStr) return 'Amanhã'
-
-  return date.toLocaleDateString('pt-BR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
+  // Ordena: ligas prioritárias primeiro, resto depois
+  return Array.from(map.values()).sort((a, b) => {
+    const ai = PRIORITY_LEAGUES.findIndex(l => l.id === a.league.id)
+    const bi = PRIORITY_LEAGUES.findIndex(l => l.id === b.league.id)
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)
   })
 }
 
-export default function GamesList({
-  games,
-  selectedDate,
-  hasLeagueFilter = false,
-}: GamesListProps) {
-  const grouped = groupByLeague(games)
+function formatDateLabel(dateStr: string): string {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  const d     = new Date(year, month - 1, day)
+  const today = new Date()
+  const fmt   = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+
+  if (dateStr === fmt(today)) return 'Hoje'
+  const yst = new Date(today); yst.setDate(today.getDate() - 1)
+  if (dateStr === fmt(yst)) return 'Ontem'
+  const tmr = new Date(today); tmr.setDate(today.getDate() + 1)
+  if (dateStr === fmt(tmr)) return 'Amanhã'
+  return d.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
+}
+
+export default function GamesList({ games, selectedDate }: GamesListProps) {
+  const [selectedLeagueId, setSelectedLeagueId] = useState<number | null>(null)
+
+  const allGroups     = groupByLeague(games)
+  const leaguesInDay  = allGroups.map(g => g.league)
+
+  // Filtro: só ligas prioritárias que têm jogo nesse dia
+  const filterOptions = PRIORITY_LEAGUES.filter(pl =>
+    leaguesInDay.some(l => l.id === pl.id)
+  )
+
+  // Aplica filtro
+  const visibleGroups = selectedLeagueId === null
+    ? allGroups
+    : allGroups.filter(g => g.league.id === selectedLeagueId)
 
   return (
     <section className="max-w-4xl mx-auto px-4 py-6">
 
-      {/* Cabeçalho com data e total de jogos */}
-      <div className="flex items-baseline justify-between mb-5">
+      {/* Cabeçalho */}
+      <div className="flex items-baseline justify-between mb-4">
         <h2 className="text-white font-bold text-lg capitalize">
           {formatDateLabel(selectedDate)}
         </h2>
@@ -73,26 +75,39 @@ export default function GamesList({
         )}
       </div>
 
-      {/* Estado vazio */}
-      {games.length === 0 && (
-        <div className="text-center py-16">
-          <p className="text-4xl mb-3">🏀</p>
-          <p className="text-white/70 font-medium">
-            {hasLeagueFilter
-              ? 'Nenhum jogo desta liga na data selecionada'
-              : 'Nenhum jogo encontrado'}
-          </p>
-          <p className="text-brand-muted text-sm mt-1">
-            {hasLeagueFilter
-              ? 'Tente outra liga ou escolha uma data diferente'
-              : 'Tente selecionar outra data'}
-          </p>
+      {/* Filtro por liga (só aparece se há ligas prioritárias no dia) */}
+      {filterOptions.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide mb-6">
+          <FilterChip
+            label="Todas"
+            active={selectedLeagueId === null}
+            onClick={() => setSelectedLeagueId(null)}
+          />
+          {filterOptions.map(opt => (
+            <FilterChip
+              key={opt.id}
+              label={opt.label}
+              active={selectedLeagueId === opt.id}
+              onClick={() => setSelectedLeagueId(
+                selectedLeagueId === opt.id ? null : opt.id
+              )}
+            />
+          ))}
         </div>
       )}
 
-      {/* Grupos por liga */}
+      {/* Sem jogos */}
+      {games.length === 0 && (
+        <div className="text-center py-16">
+          <p className="text-4xl mb-3">🏀</p>
+          <p className="text-white/70 font-medium">Nenhum jogo encontrado</p>
+          <p className="text-brand-muted text-sm mt-1">Tente selecionar outra data</p>
+        </div>
+      )}
+
+      {/* Lista por liga */}
       <div className="flex flex-col gap-8">
-        {grouped.map(({ league, games: leagueGames }) => (
+        {visibleGroups.map(({ league, games: leagueGames }) => (
           <LeagueGroup key={league.id} league={league} games={leagueGames} />
         ))}
       </div>
@@ -101,7 +116,24 @@ export default function GamesList({
   )
 }
 
-// ---- Sub-componente de grupo de liga ----
+// ---- Chip de filtro ----
+function FilterChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className={[
+        'flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150',
+        active
+          ? 'bg-brand-orange text-white'
+          : 'bg-brand-card border border-brand-border text-brand-muted hover:text-white',
+      ].join(' ')}
+    >
+      {label}
+    </button>
+  )
+}
+
+// ---- Grupo de liga ----
 interface LeagueGroupProps {
   league: ApiLeague
   games: Game[]
@@ -110,23 +142,25 @@ interface LeagueGroupProps {
 function LeagueGroup({ league, games }: LeagueGroupProps) {
   return (
     <div>
-      {/* Cabeçalho da liga */}
-      <div className="flex items-center gap-3 mb-3 pb-3 border-b border-brand-border">
-        <LeagueLogo src={league.logo} name={league.name} size={32} />
-        <div className="flex-1 min-w-0">
-          <p className="text-white font-semibold text-sm truncate">{league.name}</p>
-          {league.season && (
-            <p className="text-brand-muted text-[11px]">{league.season}</p>
-          )}
-        </div>
-        <span className="text-brand-muted text-xs flex-shrink-0">
+      <div className="flex items-center gap-2.5 mb-3 pb-2 border-b border-brand-border">
+        {league.logo && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={proxyImg(league.logo)}
+            alt=""
+            width={20}
+            height={20}
+            className="object-contain flex-shrink-0 w-5 h-5"
+            loading="lazy"
+          />
+        )}
+        <span className="text-white font-semibold text-sm">{league.name}</span>
+        <span className="text-brand-muted text-xs ml-auto">
           {games.length} {games.length === 1 ? 'jogo' : 'jogos'}
         </span>
       </div>
-
-      {/* Cards dos jogos */}
       <div className="flex flex-col gap-2">
-        {games.map((game) => (
+        {games.map(game => (
           <GameCard key={game.id} game={game} />
         ))}
       </div>
