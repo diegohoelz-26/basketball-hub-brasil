@@ -186,3 +186,10 @@ export function proxyImg(url: string | null | undefined): string {
   if (!url) return ''
   return `/api/img?url=${encodeURIComponent(url)}`
 }
+/**
+ * Retorna true se o jogo é uma final de playoffs/temporada
+ */
+export function isFinals(game: Game): boolean {
+  const name = game.league?.name?.toLowerCase() ?? ''
+  return name.includes('final') || name.includes('playoff')
+}
