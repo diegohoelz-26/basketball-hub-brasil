@@ -7,6 +7,7 @@ import {
   getLeagueLogoUrl,
   type LeagueEntry,
 } from '@/constants'
+import { proxyLogo } from '@/lib/logo'
 
 interface AllLeaguesPanelProps {
   selectedLeague: number | null
@@ -136,7 +137,7 @@ function LeagueRow({
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={getLeagueLogoUrl(league.id)}
+          src={proxyLogo(getLeagueLogoUrl(league.id))}
           alt={league.name}
           width={32}
           height={32}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { proxyLogo } from '@/lib/logo'
 
 interface TeamLogoProps {
   src: string
@@ -38,7 +39,7 @@ export default function TeamLogo({ src, name, size = 36, className = '' }: TeamL
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={src}
+      src={proxyLogo(src)}
       alt={name}
       width={size}
       height={size}

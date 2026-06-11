@@ -87,6 +87,7 @@ export interface Game {
   time: string       // "21:30"
   timestamp: number
   status: ApiGameStatus
+  stage: string | null  // "NBA Finals", "Conference Finals", null para temporada regular
   league: ApiLeague
   country: ApiCountry
   teams: {

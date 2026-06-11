@@ -1,5 +1,6 @@
 // Server Component — agrupa jogos por liga e renderiza
 import type { Game, ApiLeague, GamesByLeague } from '@/types'
+import { proxyLogo } from '@/lib/logo'
 import GameCard from './GameCard'
 
 interface GamesListProps {
@@ -115,7 +116,7 @@ function LeagueGroup({ league, games }: LeagueGroupProps) {
           {league.logo && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={league.logo}
+              src={proxyLogo(league.logo)}
               alt={league.name}
               width={32}
               height={32}

@@ -4,7 +4,7 @@
 // ============================================================
 
 import type { ApiGame, ApiResponse, Game, DisplayStatus } from '@/types'
-import { API_BASE_URL, API_CACHE_SECONDS, GAME_STATUS_CODES } from '@/constants'
+import { API_BASE_URL, API_CACHE_SECONDS, GAME_STATUS_CODES, FEATURED_LEAGUES } from '@/constants'
 
 // ------------------------------------------------------------
 // Helpers internos
@@ -45,6 +45,7 @@ function normalizeGame(raw: ApiGame): Game {
       short: raw.status?.short ?? 'NS',
       timer: raw.status?.timer ?? null,
     },
+    stage:   raw.stage ?? null,
     league:  raw.league,
     country: raw.country,
     teams: {
@@ -164,6 +165,30 @@ export function formatGameTime(timestamp: number): string {
   } catch {
     return '--:--'
   }
+}
+
+/**
+ * Retorna o jogo em destaque do dia — apenas finais e playoffs.
+ * Prioridade: NBA > WNBA > NBB > LBF > EuroLeague > ACB.
+ * Retorna null se não houver jogo especial (temporada regular).
+ */
+export function getFeaturedGame(games: Game[]): Game | null {
+  const FINALS_KEYWORDS = ['final', 'playoff', 'championship', 'semi-final', 'semifinal']
+  const PRIORITY = FEATURED_LEAGUES.map((l) => l.id)
+
+  for (const leagueId of PRIORITY) {
+    const leagueGames = games.filter((g) => g.league.id === leagueId)
+
+    const specialGame = leagueGames.find((g) => {
+      if (!g.stage) return false
+      const s = g.stage.toLowerCase()
+      return FINALS_KEYWORDS.some((kw) => s.includes(kw))
+    })
+
+    if (specialGame) return specialGame
+  }
+
+  return null
 }
 
 /**

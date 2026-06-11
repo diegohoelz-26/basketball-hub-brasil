@@ -8,6 +8,7 @@ import {
   getLeagueLogoUrl,
   type LeagueEntry,
 } from '@/constants'
+import { proxyLogo } from '@/lib/logo'
 import AllLeaguesPanel from './AllLeaguesPanel'
 
 const FAVORITES_KEY = 'bhb:favorites'
@@ -91,7 +92,7 @@ export default function LeagueFilterBar({
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={getLeagueLogoUrl(league.id)}
+                    src={proxyLogo(getLeagueLogoUrl(league.id))}
                     alt=""
                     width={16}
                     height={16}

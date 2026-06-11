@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import type { Game } from '@/types'
-import { isLive } from '@/lib/apiSports'
+import { isLive, getFeaturedGame } from '@/lib/apiSports'
 import LeagueFilterBar from './LeagueFilterBar'
 import CalendarStrip from './CalendarStrip'
+import FeaturedGameCard from './FeaturedGameCard'
 import LiveGamesSection from './LiveGamesSection'
 import LiveRefresher from './LiveRefresher'
 import GamesList from './GamesList'
@@ -32,7 +33,7 @@ export default function GamesView({
 
   function handleSelectLeague(id: number | null) {
     setSelectedLeague(id)
-    // Atualiza URL para shareability sem triggar navegação Next.js
+    // Atualiza URL sem triggar navegação Next.js — para links compartilháveis
     const url = new URL(window.location.href)
     if (id !== null) {
       url.searchParams.set('league', String(id))
@@ -50,6 +51,9 @@ export default function GamesView({
   const liveGames    = filteredGames.filter((g) => isLive(g.status.short))
   const hasLiveGames = liveGames.length > 0
 
+  // Jogo em destaque só aparece quando não há filtro de liga ativo
+  const featuredGame = selectedLeague === null ? getFeaturedGame(games) : null
+
   return (
     <>
       {/* Barra sticky abaixo do header: filtro + calendário */}
@@ -61,13 +65,16 @@ export default function GamesView({
         <CalendarStrip selectedDate={selectedDate} />
       </div>
 
+      {/* Jogo em destaque (finais / playoffs) */}
+      {featuredGame && <FeaturedGameCard game={featuredGame} />}
+
       {/* Auto-refresh silencioso durante jogos ao vivo */}
       <LiveRefresher isActive={hasLiveGames} />
 
       {/* Jogos ao vivo em destaque */}
       <LiveGamesSection games={liveGames} />
 
-      {/* Lista por liga */}
+      {/* Lista completa por liga */}
       <GamesList
         games={filteredGames}
         selectedDate={selectedDate}
