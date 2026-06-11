@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
     })
 
     if (!res.ok) {
+      console.error(`[logo proxy] CDN retornou ${res.status} para: ${url}`)
       return new NextResponse(FALLBACK_SVG, {
         headers: { 'Content-Type': 'image/svg+xml' },
       })
@@ -42,7 +43,8 @@ export async function GET(request: NextRequest) {
         'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
       },
     })
-  } catch {
+  } catch (err) {
+    console.error(`[logo proxy] Exceção ao buscar: ${url}`, err)
     return new NextResponse(FALLBACK_SVG, {
       headers: { 'Content-Type': 'image/svg+xml' },
     })

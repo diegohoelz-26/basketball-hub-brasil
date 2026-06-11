@@ -1,12 +1,9 @@
 /**
- * Converte uma URL de imagem da API-Sports para a rota de proxy local.
- * O proxy busca a imagem no servidor (com a chave da API), evitando
- * restrições de hotlinking/CORS no browser.
+ * Retorna a URL da imagem para uso em <img> tags.
+ * <img> tags carregam de qualquer domínio sem restrição de CORS.
+ * Proxy server-side removido pois o CDN da API-Sports é inacessível
+ * via conexão servidor→CDN neste ambiente.
  */
 export function proxyLogo(url: string | null | undefined): string {
-  if (!url) return ''
-  if (url.startsWith('https://media.api-sports.io/')) {
-    return `/api/logo?url=${encodeURIComponent(url)}`
-  }
-  return url
+  return url ?? ''
 }

@@ -1,10 +1,10 @@
 // Componente compartilhado (sem 'use client' — funciona no contexto Client de GamesView)
 import type { Game } from '@/types'
-import { isLive, formatGameTime, getDisplayStatus } from '@/lib/apiSports'
+import { isLive, isFinals, formatGameTime, getDisplayStatus } from '@/lib/apiSports'
 import { LEAGUE_CHANNELS } from '@/constants'
-import { proxyLogo } from '@/lib/logo'
 import { Tv } from 'lucide-react'
 import TeamLogo from './TeamLogo'
+import LeagueLogo from './LeagueLogo'
 
 interface FeaturedGameCardProps {
   game: Game
@@ -12,6 +12,7 @@ interface FeaturedGameCardProps {
 
 export default function FeaturedGameCard({ game }: FeaturedGameCardProps) {
   const live          = isLive(game.status.short)
+  const finals        = isFinals(game)
   const displayStatus = getDisplayStatus(game.status.short)
   const finished      = displayStatus === 'FINALIZADO'
   const homeScore     = game.scores.home.total
@@ -20,33 +21,35 @@ export default function FeaturedGameCard({ game }: FeaturedGameCardProps) {
   const gameTime      = formatGameTime(game.timestamp)
   const channels      = LEAGUE_CHANNELS[game.league.id] ?? []
 
+  const label = finals
+    ? '🏆 Finais'
+    : live
+    ? 'Ao Vivo'
+    : 'Jogo do Dia'
+
   return (
     <div className="max-w-4xl mx-auto px-4 pt-6 pb-2">
       {/* Label acima do card */}
-      <p className="text-brand-orange text-[10px] font-bold tracking-[0.25em] uppercase mb-2 flex items-center gap-1.5">
-        <span className="w-1 h-1 rounded-full bg-brand-orange inline-block" />
-        Jogo em Destaque
+      <p className={`text-[10px] font-bold tracking-[0.25em] uppercase mb-2 flex items-center gap-1.5 ${
+        live ? 'text-brand-live' : 'text-brand-orange'
+      }`}>
+        <span className={`w-1 h-1 rounded-full inline-block ${live ? 'bg-brand-live animate-pulse' : 'bg-brand-orange'}`} />
+        {label}
       </p>
 
       <article
         className={`bg-brand-card rounded-2xl overflow-hidden border ${
           live
             ? 'border-brand-live/50 shadow-[0_0_40px_rgba(255,59,59,0.15)]'
-            : 'border-brand-orange/25 shadow-[0_0_40px_rgba(255,107,26,0.08)]'
+            : finals
+            ? 'border-brand-orange/40 shadow-[0_0_40px_rgba(255,107,26,0.15)]'
+            : 'border-brand-border shadow-[0_0_20px_rgba(255,107,26,0.05)]'
         }`}
       >
         {/* ── Cabeçalho da liga ── */}
         <div className="flex items-center justify-between px-5 py-3 bg-brand-dark/60 border-b border-brand-border">
           <div className="flex items-center gap-2.5 min-w-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={proxyLogo(game.league.logo)}
-              alt={game.league.name}
-              width={20}
-              height={20}
-              loading="lazy"
-              className="w-5 h-5 object-contain flex-shrink-0"
-            />
+            <LeagueLogo src={game.league.logo} name={game.league.name} size={20} />
             <span className="text-white text-xs font-bold truncate">
               {game.league.name}
             </span>

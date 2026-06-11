@@ -12,12 +12,10 @@ export default function Header() {
           </span>
         </a>
 
-        {/* Navegação */}
-        <nav className="hidden sm:flex items-center gap-6 text-sm">
-          <a href="#jogos"     className="text-brand-muted hover:text-brand-chalk transition-colors">Jogos</a>
-          <a href="#ligas"     className="text-brand-muted hover:text-brand-chalk transition-colors">Ligas</a>
-          <a href="#parceiros" className="text-brand-muted hover:text-brand-chalk transition-colors">Parceiros</a>
-        </nav>
+        {/* Slogan */}
+        <p className="hidden sm:block text-brand-muted text-xs tracking-widest uppercase">
+          Basquete em tempo real
+        </p>
 
       </div>
     </header>

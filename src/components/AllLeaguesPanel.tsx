@@ -7,7 +7,7 @@ import {
   getLeagueLogoUrl,
   type LeagueEntry,
 } from '@/constants'
-import { proxyLogo } from '@/lib/logo'
+import LeagueLogo from './LeagueLogo'
 
 interface AllLeaguesPanelProps {
   selectedLeague: number | null
@@ -132,18 +132,10 @@ function LeagueRow({
       {/* Logo */}
       <button
         onClick={onSelect}
-        className="w-8 h-8 flex-shrink-0 flex items-center justify-center"
+        className="flex-shrink-0"
         aria-label={`Selecionar ${league.name}`}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={proxyLogo(getLeagueLogoUrl(league.id))}
-          alt={league.name}
-          width={32}
-          height={32}
-          loading="lazy"
-          className="w-8 h-8 object-contain"
-        />
+        <LeagueLogo src={getLeagueLogoUrl(league.id)} name={league.name} size={32} />
       </button>
 
       {/* Nome + país */}

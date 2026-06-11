@@ -1,6 +1,6 @@
 // Server Component — agrupa jogos por liga e renderiza
 import type { Game, ApiLeague, GamesByLeague } from '@/types'
-import { proxyLogo } from '@/lib/logo'
+import LeagueLogo from './LeagueLogo'
 import GameCard from './GameCard'
 
 interface GamesListProps {
@@ -112,19 +112,7 @@ function LeagueGroup({ league, games }: LeagueGroupProps) {
     <div>
       {/* Cabeçalho da liga */}
       <div className="flex items-center gap-3 mb-3 pb-3 border-b border-brand-border">
-        <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center">
-          {league.logo && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={proxyLogo(league.logo)}
-              alt={league.name}
-              width={32}
-              height={32}
-              loading="lazy"
-              className="w-8 h-8 object-contain"
-            />
-          )}
-        </div>
+        <LeagueLogo src={league.logo} name={league.name} size={32} />
         <div className="flex-1 min-w-0">
           <p className="text-white font-semibold text-sm truncate">{league.name}</p>
           {league.season && (

@@ -100,6 +100,38 @@ export interface Game {
 /** Status simplificado para exibição */
 export type DisplayStatus = 'AO VIVO' | 'FINALIZADO' | 'AGENDADO'
 
+// ---------- Standings ----------
+
+export interface ApiStandingTeam {
+  id: number
+  name: string
+  logo: string
+}
+
+export interface ApiStandingGames {
+  played: number
+  win:  { total: number; percentage: string }
+  lose: { total: number; percentage: string }
+}
+
+/** Uma linha de classificação, como retornada pela API-Sports */
+export interface ApiStanding {
+  position: number
+  stage: string
+  group: { name: string | null; points: number }
+  team: ApiStandingTeam
+  games: ApiStandingGames
+  points: { for: number; against: number }
+  form: string | null
+  description: string | null
+}
+
+/** Grupo de classificação (conferência, chave, etc.) */
+export interface StandingGroup {
+  name: string | null
+  rows: ApiStanding[]
+}
+
 /** Jogos agrupados por liga */
 export interface GamesByLeague {
   league: ApiLeague

@@ -4,7 +4,7 @@
 // ============================================================
 
 import type { ApiGame, ApiResponse, Game, DisplayStatus } from '@/types'
-import { API_BASE_URL, API_CACHE_SECONDS, GAME_STATUS_CODES, FEATURED_LEAGUES } from '@/constants'
+import { API_BASE_URL, API_CACHE_SECONDS, GAME_STATUS_CODES, FEATURED_LEAGUES, LEAGUE_NAME_OVERRIDES } from '@/constants'
 
 // ------------------------------------------------------------
 // Helpers internos
@@ -34,10 +34,12 @@ function getHeaders(): HeadersInit {
  * Normaliza um ApiGame para o tipo Game (apenas os campos usados pela app).
  * Garante que nenhum campo obrigatório chegue como undefined.
  */
+
 function normalizeGame(raw: ApiGame): Game {
+  const leagueName = LEAGUE_NAME_OVERRIDES[raw.league.id] ?? raw.league.name
   return {
     id:        raw.id,
-    date:      raw.date.split('T')[0],    // "2026-06-09T00:00:00+00:00" → "2026-06-09"
+    date:      raw.date.split('T')[0],
     time:      raw.time ?? '--:--',
     timestamp: raw.timestamp,
     status:    {
@@ -46,7 +48,7 @@ function normalizeGame(raw: ApiGame): Game {
       timer: raw.status?.timer ?? null,
     },
     stage:   raw.stage ?? null,
-    league:  raw.league,
+    league:  { ...raw.league, name: leagueName },
     country: raw.country,
     teams: {
       home: raw.teams.home,
@@ -167,25 +169,52 @@ export function formatGameTime(timestamp: number): string {
   }
 }
 
+const FINALS_KEYWORDS = ['final', 'playoff', 'championship', 'semi-final', 'semifinal']
+
+/** Retorna true se o jogo é de fase eliminatória (finais, playoffs). */
+export function isFinals(game: Game): boolean {
+  if (!game.stage) return false
+  const s = game.stage.toLowerCase()
+  return FINALS_KEYWORDS.some((kw) => s.includes(kw))
+}
+
 /**
- * Retorna o jogo em destaque do dia — apenas finais e playoffs.
- * Prioridade: NBA > WNBA > NBB > LBF > EuroLeague > ACB.
- * Retorna null se não houver jogo especial (temporada regular).
+ * Retorna o jogo em destaque do dia.
+ *
+ * Sempre aparece quando NBA, WNBA ou NBB têm jogos — independente da fase.
+ * Finais/playoffs de qualquer liga têm prioridade máxima.
+ *
+ * Prioridade:
+ *  1. Finais/playoffs de qualquer liga em destaque (NBA, WNBA, NBB, EuroLeague, ACB)
+ *  2. Jogo ao vivo de NBA, WNBA ou NBB
+ *  3. Primeiro jogo agendado de NBA, WNBA ou NBB
+ *
+ * Retorna null somente quando não há jogos de NBA, WNBA ou NBB no dia.
  */
 export function getFeaturedGame(games: Game[]): Game | null {
-  const FINALS_KEYWORDS = ['final', 'playoff', 'championship', 'semi-final', 'semifinal']
-  const PRIORITY = FEATURED_LEAGUES.map((l) => l.id)
+  const ALL_FEATURED  = FEATURED_LEAGUES.map((l) => l.id)
+  const TOP_LEAGUES   = [12, 13, 26] // NBA, WNBA (NBA W), NBB — aparecem todo dia
 
-  for (const leagueId of PRIORITY) {
-    const leagueGames = games.filter((g) => g.league.id === leagueId)
+  // 1. Finais/playoffs de qualquer liga em destaque (mais importante do dia)
+  for (const leagueId of ALL_FEATURED) {
+    const game = games
+      .filter((g) => g.league.id === leagueId)
+      .find((g) => isFinals(g))
+    if (game) return game
+  }
 
-    const specialGame = leagueGames.find((g) => {
-      if (!g.stage) return false
-      const s = g.stage.toLowerCase()
-      return FINALS_KEYWORDS.some((kw) => s.includes(kw))
-    })
+  // 2. Jogo ao vivo das ligas principais
+  for (const leagueId of TOP_LEAGUES) {
+    const game = games.find(
+      (g) => g.league.id === leagueId && isLive(g.status.short)
+    )
+    if (game) return game
+  }
 
-    if (specialGame) return specialGame
+  // 3. Primeiro jogo do dia das ligas principais (temporada regular)
+  for (const leagueId of TOP_LEAGUES) {
+    const game = games.find((g) => g.league.id === leagueId)
+    if (game) return game
   }
 
   return null
