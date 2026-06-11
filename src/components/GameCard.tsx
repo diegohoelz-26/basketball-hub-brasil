@@ -1,4 +1,5 @@
-// Server Component
+'use client'
+
 import type { Game } from '@/types'
 import { getDisplayStatus, isLive, formatGameTime, proxyImg } from '@/lib/apiSports'
 import { LEAGUE_CHANNELS } from '@/constants'
