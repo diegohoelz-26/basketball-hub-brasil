@@ -45,6 +45,7 @@ function normalizeGame(raw: ApiGame): Game {
       short: raw.status?.short ?? 'NS',
       timer: raw.status?.timer ?? null,
     },
+    stage:   raw.stage,
     league:  raw.league,
     country: raw.country,
     teams: {
@@ -187,9 +188,29 @@ export function proxyImg(url: string | null | undefined): string {
   return `/api/img?url=${encodeURIComponent(url)}`
 }
 /**
- * Retorna true se o jogo é uma final de playoffs/temporada
+ * Retorna true se o jogo é uma final ou playoff.
  */
 export function isFinals(game: Game): boolean {
-  const name = game.league?.name?.toLowerCase() ?? ''
-  return name.includes('final') || name.includes('playoff')
+  const leagueName = game.league?.name?.toLowerCase() ?? ''
+  const stageName  = game.status?.long?.toLowerCase() ?? ''
+  return (
+    leagueName.includes('final') ||
+    leagueName.includes('playoff') ||
+    stageName.includes('final')
+  )
+}
+
+/**
+ * Escolhe o "jogo do dia" para destaque na home.
+ * Prioridade: ao vivo > final/playoff > NBA > primeiro jogo.
+ */
+export function getFeaturedGame(games: Game[]): Game | null {
+  if (!games || games.length === 0) return null
+  const liveGame = games.find((g) => isLive(g.status.short))
+  if (liveGame) return liveGame
+  const finalsGame = games.find((g) => isFinals(g))
+  if (finalsGame) return finalsGame
+  const nbaGame = games.find((g) => g.league.id === 12)
+  if (nbaGame) return nbaGame
+  return games[0]
 }

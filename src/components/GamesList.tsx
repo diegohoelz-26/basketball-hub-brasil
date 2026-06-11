@@ -9,6 +9,7 @@ import GameCard from './GameCard'
 interface GamesListProps {
   games: Game[]
   selectedDate: string
+  hasLeagueFilter?: boolean
 }
 
 function groupByLeague(games: Game[]): GamesByLeague[] {

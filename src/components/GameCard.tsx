@@ -6,6 +6,7 @@ import { Tv } from 'lucide-react'
 
 interface GameCardProps {
   game: Game
+  highlight?: boolean
 }
 
 export default function GameCard({ game }: GameCardProps) {
