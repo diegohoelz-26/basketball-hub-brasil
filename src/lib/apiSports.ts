@@ -4,7 +4,7 @@
 // ============================================================
 
 import type { ApiGame, ApiResponse, Game, DisplayStatus } from '@/types'
-import { API_BASE_URL, API_CACHE_SECONDS, GAME_STATUS_CODES } from '@/constants'
+import { API_BASE_URL, API_CACHE_SECONDS, GAME_STATUS_CODES, LEAGUE_NAME_OVERRIDES } from '@/constants'
 
 // ------------------------------------------------------------
 // Helpers internos
@@ -46,7 +46,10 @@ function normalizeGame(raw: ApiGame): Game {
       timer: raw.status?.timer ?? null,
     },
     stage:   raw.stage,
-    league:  raw.league,
+    league:  {
+      ...raw.league,
+      name: LEAGUE_NAME_OVERRIDES[raw.league.id] ?? raw.league.name,
+    },
     country: raw.country,
     teams: {
       home: raw.teams.home,
