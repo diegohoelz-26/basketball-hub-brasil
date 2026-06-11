@@ -59,7 +59,7 @@ export default function CalendarStrip({ selectedDate }: CalendarStripProps) {
   const totalDays = getDaysInMonth(year, month)
 
   return (
-    <section className="bg-brand-dark border-b border-brand-border sticky top-14 z-40">
+    <section className="bg-brand-dark border-b border-brand-border">
       <div className="max-w-4xl mx-auto px-4 py-2">
 
         {/* Cabeçalho: seta ← mês/ano seta → */}

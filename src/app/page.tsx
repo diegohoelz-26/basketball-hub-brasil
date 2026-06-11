@@ -6,20 +6,31 @@ import GamesList from '@/components/GamesList'
 import LiveGamesSection from '@/components/LiveGamesSection'
 import LiveRefresher from '@/components/LiveRefresher'
 import ScoreTicker from '@/components/ScoreTicker'
+import LeagueFilterBar from '@/components/LeagueFilterBar'
 import LeaguesInfo from '@/components/LeaguesInfo'
 import AdBanner from '@/components/AdBanner'
 import { getGamesByDate, getTodayDate, isLive } from '@/lib/apiSports'
 
 interface HomeProps {
-  searchParams: Promise<{ date?: string }>
+  searchParams: Promise<{ date?: string; league?: string }>
 }
 
 export default async function Home({ searchParams }: HomeProps) {
-  const params = await searchParams
-  const date = params.date ?? getTodayDate()
+  const params        = await searchParams
+  const date          = params.date ?? getTodayDate()
+  const leagueParam   = params.league ? parseInt(params.league, 10) : null
+  const selectedLeague = leagueParam !== null && !Number.isNaN(leagueParam)
+    ? leagueParam
+    : null
+
   const games = await getGamesByDate(date)
 
-  const liveGames = games.filter((g) => isLive(g.status.short))
+  // Filtra por liga se houver seleção
+  const filteredGames = selectedLeague !== null
+    ? games.filter((g) => g.league.id === selectedLeague)
+    : games
+
+  const liveGames    = filteredGames.filter((g) => isLive(g.status.short))
   const hasLiveGames = liveGames.length > 0
 
   return (
@@ -28,18 +39,26 @@ export default async function Home({ searchParams }: HomeProps) {
       <ScoreTicker games={games} />
       <Hero />
 
-      {/* Jogos: calendário + lista */}
-      <div id="jogos" className="scroll-mt-14">
+      {/* Barra sticky: filtro de liga + calendário ficam grudados abaixo do header */}
+      <div id="jogos" className="sticky top-14 z-40 scroll-mt-14">
+        <LeagueFilterBar selectedLeague={selectedLeague} selectedDate={date} />
         <CalendarStrip selectedDate={date} />
+      </div>
 
-        {/* Polling ao vivo: não renderiza nada, apenas chama router.refresh() */}
+      {/* Conteúdo dos jogos */}
+      <div>
+        {/* Auto-refresh silencioso enquanto houver jogos ao vivo */}
         <LiveRefresher isActive={hasLiveGames} />
 
-        {/* Seção de destaque para jogos ao vivo */}
+        {/* Jogos ao vivo em destaque */}
         <LiveGamesSection games={liveGames} />
 
-        {/* Lista completa agrupada por liga */}
-        <GamesList games={games} selectedDate={date} />
+        {/* Lista completa por liga */}
+        <GamesList
+          games={filteredGames}
+          selectedDate={date}
+          hasLeagueFilter={selectedLeague !== null}
+        />
       </div>
 
       <LeaguesInfo />
