@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { Star, LayoutGrid } from 'lucide-react'
 import {
   FEATURED_LEAGUES,
@@ -15,14 +14,13 @@ const FAVORITES_KEY = 'bhb:favorites'
 
 interface LeagueFilterBarProps {
   selectedLeague: number | null
-  selectedDate: string
+  onSelectLeague: (id: number | null) => void
 }
 
 export default function LeagueFilterBar({
   selectedLeague,
-  selectedDate,
+  onSelectLeague,
 }: LeagueFilterBarProps) {
-  const router = useRouter()
   const [favorites, setFavorites] = useState<number[]>([])
   const [showPanel, setShowPanel] = useState(false)
 
@@ -31,7 +29,7 @@ export default function LeagueFilterBar({
       const stored = localStorage.getItem(FAVORITES_KEY)
       if (stored) setFavorites(JSON.parse(stored) as number[])
     } catch {
-      // sem acesso ao localStorage — funciona sem favoritos
+      // sem localStorage — funciona sem favoritos
     }
   }, [])
 
@@ -43,14 +41,7 @@ export default function LeagueFilterBar({
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(next))
   }
 
-  function selectLeague(id: number | null) {
-    const params = new URLSearchParams()
-    params.set('date', selectedDate)
-    if (id !== null) params.set('league', String(id))
-    router.push(`/?${params.toString()}`)
-  }
-
-  // Ligas favoritas que não estão nos FEATURED (vindas do painel "Mais ligas")
+  // Ligas favoritas que não estão nos FEATURED (adicionadas pelo painel)
   const allKnownLeagues = LEAGUES_BY_REGION.flatMap((r) => r.leagues)
   const extraFavorites = favorites
     .filter((id) => !FEATURED_LEAGUES.some((l) => l.id === id))
@@ -71,7 +62,7 @@ export default function LeagueFilterBar({
           <button
             role="tab"
             aria-selected={selectedLeague === null}
-            onClick={() => selectLeague(null)}
+            onClick={() => onSelectLeague(null)}
             className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
               selectedLeague === null
                 ? 'bg-brand-orange text-brand-dark'
@@ -88,11 +79,10 @@ export default function LeagueFilterBar({
 
             return (
               <div key={league.id} className="flex-shrink-0 flex items-center">
-                {/* Botão principal da liga */}
                 <button
                   role="tab"
                   aria-selected={isSelected}
-                  onClick={() => selectLeague(league.id)}
+                  onClick={() => onSelectLeague(league.id)}
                   className={`flex items-center gap-1.5 pl-2 pr-1 py-1.5 rounded-l-full text-xs font-semibold whitespace-nowrap transition-all ${
                     isSelected
                       ? 'bg-brand-orange text-brand-dark'
@@ -112,7 +102,6 @@ export default function LeagueFilterBar({
                   {league.shortName}
                 </button>
 
-                {/* Botão estrela de favorito */}
                 <button
                   onClick={() => toggleFavorite(league.id)}
                   className={`pl-0.5 pr-2 py-1.5 rounded-r-full transition-all ${
@@ -128,16 +117,13 @@ export default function LeagueFilterBar({
                       : `Favoritar ${league.shortName}`
                   }
                 >
-                  <Star
-                    size={9}
-                    fill={isFav ? 'currentColor' : 'none'}
-                  />
+                  <Star size={9} fill={isFav ? 'currentColor' : 'none'} />
                 </button>
               </div>
             )
           })}
 
-          {/* Botão "Mais ligas" */}
+          {/* Mais ligas */}
           <button
             onClick={() => setShowPanel(true)}
             className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-brand-muted hover:text-white hover:bg-brand-card transition-colors whitespace-nowrap border border-brand-border ml-1"
@@ -154,7 +140,7 @@ export default function LeagueFilterBar({
           favorites={favorites}
           onToggleFavorite={toggleFavorite}
           onSelectLeague={(id) => {
-            selectLeague(id)
+            onSelectLeague(id)
             setShowPanel(false)
           }}
           onClose={() => setShowPanel(false)}
