@@ -1,12 +1,13 @@
 // Server Component — informações das ligas e calendário das competições
-import { LEAGUE_CHANNELS, SUPPORTED_LEAGUES } from '@/constants'
+import { LEAGUE_CHANNELS, SUPPORTED_LEAGUES, getLeagueLogoUrl } from '@/constants'
+import { proxyImg } from '@/lib/apiSports'
 
 interface LeagueInfo {
   id: number
   name: string
   country: string
   flag: string
-  season: string       // janela da temporada
+  season: string
   description: string
 }
 
@@ -79,16 +80,27 @@ export default function LeaguesInfo() {
           {LEAGUES_INFO.map((league) => {
             const channels = LEAGUE_CHANNELS[league.id] ?? []
             return (
-              <article
+              <a
                 key={league.id}
-                className="bg-brand-card border border-brand-border rounded-2xl p-5 hover:border-brand-orange/40 transition-colors flex flex-col"
+                href={`/?league=${league.id}#jogos`}
+                className="group bg-brand-card border border-brand-border rounded-2xl p-5 hover:border-brand-orange/60 transition-colors flex flex-col"
               >
-                {/* Nome + país */}
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-display text-2xl text-brand-chalk tracking-wide">
-                    {league.name}
-                  </h3>
-                  <span className="text-lg" title={league.country}>{league.flag}</span>
+                {/* Logo + nome + país */}
+                <div className="flex items-center gap-3 mb-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={proxyImg(getLeagueLogoUrl(league.id))}
+                    alt={league.name}
+                    width={40}
+                    height={40}
+                    className="object-contain w-10 h-10 flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-display text-xl text-brand-chalk tracking-wide leading-tight group-hover:text-brand-orange transition-colors truncate">
+                      {league.name}
+                    </h3>
+                    <span className="text-brand-muted text-xs">{league.country} {league.flag}</span>
+                  </div>
                 </div>
 
                 {/* Temporada */}
@@ -107,7 +119,7 @@ export default function LeaguesInfo() {
                     📺 {channels.join(' · ')}
                   </p>
                 )}
-              </article>
+              </a>
             )
           })}
         </div>

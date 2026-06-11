@@ -26,14 +26,9 @@ export default function Hero() {
       <div className="relative max-w-5xl mx-auto px-4 pt-14 pb-12 sm:pt-20 sm:pb-16">
 
         {/* Eyebrow: as ligas */}
-        <div className="mb-4">
-          <p className="text-brand-orange text-xs font-semibold tracking-[0.25em] uppercase">
-            NBA · WNBA · NBB · LBF · EuroLeague · ACB
-          </p>
-          <p className="text-brand-orange text-xs font-semibold tracking-[0.25em] uppercase mt-1">
-            e as principais ligas de Basketball do mundo!
-          </p>
-        </div>
+        <p className="text-brand-orange text-xs font-semibold tracking-[0.25em] uppercase mb-4">
+          NBA · WNBA · NBB · LBF · EuroLeague · ACB
+        </p>
 
         {/* Título estilo placar de ginásio */}
         <h1 className="font-display text-brand-chalk leading-[0.9] text-5xl sm:text-7xl md:text-8xl tracking-wide">
