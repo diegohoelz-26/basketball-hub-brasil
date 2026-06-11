@@ -3,6 +3,7 @@ import type { Game } from '@/types'
 import { getDisplayStatus, isLive, formatGameTime, proxyImg } from '@/lib/apiSports'
 import { LEAGUE_CHANNELS } from '@/constants'
 import { Tv } from 'lucide-react'
+import TeamLogo from './TeamLogo'
 
 interface GameCardProps {
   game: Game
@@ -91,21 +92,7 @@ interface TeamRowProps {
 function TeamRow({ name, logo, score, winning, hasScore }: TeamRowProps) {
   return (
     <div className="flex items-center gap-3">
-      <div className="w-7 h-7 flex-shrink-0 flex items-center justify-center">
-        {logo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={logo}
-            alt=""
-            width={28}
-            height={28}
-            className="object-contain w-7 h-7"
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-7 h-7 rounded-full bg-brand-border" />
-        )}
-      </div>
+      <TeamLogo src={logo} name={name} size={28} />
       <span className={`flex-1 text-sm truncate ${winning ? 'text-white font-semibold' : 'text-white/80'}`}>
         {name}
       </span>

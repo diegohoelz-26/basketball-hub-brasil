@@ -19,6 +19,7 @@ export const PRIORITY_LEAGUES: { id: number; label: string }[] = [
   { id: 12,  label: 'NBA' },
   { id: 13,  label: 'WNBA' },
   { id: 26,  label: 'NBB' },
+  { id: 27,  label: 'LBF' },
   { id: 120, label: 'EuroLeague' },
   { id: 117, label: 'ACB' },
 ]
@@ -96,6 +97,7 @@ export const FEATURED_LEAGUES: LeagueEntry[] = [
   { id: 120, name: 'EuroLeague',             shortName: 'EuroLeague', country: 'Europa',  flag: '🇪🇺' },
   { id: 117, name: 'Liga ACB',               shortName: 'ACB',        country: 'Espanha', flag: '🇪🇸' },
 ]
+
 
 export interface LeagueRegion {
   region: string

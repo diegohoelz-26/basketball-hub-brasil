@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface CalendarStripProps {
   selectedDate: string // "YYYY-MM-DD"
+  endSlot?: React.ReactNode
 }
 
 const MONTH_NAMES = [
@@ -28,7 +29,7 @@ function getTodayStrBRT(): string {
   }).split('/').reverse().join('-')
 }
 
-export default function CalendarStrip({ selectedDate }: CalendarStripProps) {
+export default function CalendarStrip({ selectedDate, endSlot }: CalendarStripProps) {
   const router = useRouter()
   const todayStr = getTodayStrBRT()
 
@@ -62,27 +63,31 @@ export default function CalendarStrip({ selectedDate }: CalendarStripProps) {
     <section className="bg-brand-dark border-b border-brand-border">
       <div className="max-w-4xl mx-auto px-4 py-2">
 
-        {/* Cabeçalho: seta ← mês/ano seta → */}
+        {/* Cabeçalho: seta ← mês/ano seta → | slot opcional (ex: abas) */}
         <div className="flex items-center justify-between mb-2">
-          <button
-            onClick={() => prevMonth()}
-            className="p-1.5 rounded-lg text-brand-muted hover:text-white hover:bg-brand-card transition-colors"
-            aria-label="Mês anterior"
-          >
-            <ChevronLeft size={18} />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => prevMonth()}
+              className="p-1.5 rounded-lg text-brand-muted hover:text-white hover:bg-brand-card transition-colors"
+              aria-label="Mês anterior"
+            >
+              <ChevronLeft size={18} />
+            </button>
 
-          <span className="text-white text-sm font-semibold select-none">
-            {MONTH_NAMES[month]} {year}
-          </span>
+            <span className="text-white text-sm font-semibold select-none">
+              {MONTH_NAMES[month]} {year}
+            </span>
 
-          <button
-            onClick={() => nextMonth()}
-            className="p-1.5 rounded-lg text-brand-muted hover:text-white hover:bg-brand-card transition-colors"
-            aria-label="Próximo mês"
-          >
-            <ChevronRight size={18} />
-          </button>
+            <button
+              onClick={() => nextMonth()}
+              className="p-1.5 rounded-lg text-brand-muted hover:text-white hover:bg-brand-card transition-colors"
+              aria-label="Próximo mês"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+
+          {endSlot}
         </div>
 
         {/* Dias em scroll horizontal */}

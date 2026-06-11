@@ -65,19 +65,21 @@ export default function GamesView({
           selectedLeague={selectedLeague}
           onSelectLeague={handleSelectLeague}
         />
-        <CalendarStrip selectedDate={selectedDate} />
-
-        {/* Toggle Jogos / Classificação */}
-        <div className="bg-brand-dark border-b border-brand-border px-4 py-2 flex gap-1">
-          <ViewTab active={view === 'jogos'} onClick={() => setView('jogos')}>
-            Jogos
-          </ViewTab>
-          {canShowStandings && (
-            <ViewTab active={view === 'classificacao'} onClick={() => setView('classificacao')}>
-              Classificação
-            </ViewTab>
-          )}
-        </div>
+        <CalendarStrip
+          selectedDate={selectedDate}
+          endSlot={
+            <div className="flex gap-1">
+              <ViewTab active={view === 'jogos'} onClick={() => setView('jogos')}>
+                Jogos
+              </ViewTab>
+              {canShowStandings && (
+                <ViewTab active={view === 'classificacao'} onClick={() => setView('classificacao')}>
+                  Class.
+                </ViewTab>
+              )}
+            </div>
+          }
+        />
       </div>
 
       {view === 'classificacao' ? (
@@ -115,7 +117,7 @@ function ViewTab({ active, onClick, children }: ViewTabProps) {
   return (
     <button
       onClick={onClick}
-      className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+      className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
         active
           ? 'bg-brand-orange text-brand-dark'
           : 'text-brand-muted hover:text-white hover:bg-brand-card'

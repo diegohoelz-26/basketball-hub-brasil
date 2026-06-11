@@ -36,6 +36,14 @@ const LEAGUES_INFO: LeagueInfo[] = [
     description: 'O Novo Basquete Brasil reúne os principais clubes do país — Flamengo, Franca, Minas e outros gigantes da bola laranja nacional.',
   },
   {
+    id: 27,
+    name: 'Liga Basquete Feminino',
+    country: 'Brasil',
+    flag: '🇧🇷',
+    season: 'Março a Setembro',
+    description: 'A principal liga feminina do Brasil, com clubes como Sesi Araraquara, Avai/Kindermann e Flamengo disputando o título nacional.',
+  },
+  {
     id: SUPPORTED_LEAGUES.EUROLEAGUE,
     name: 'EuroLeague',
     country: 'Europa',
